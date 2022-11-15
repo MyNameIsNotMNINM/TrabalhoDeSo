@@ -1,4 +1,4 @@
-import { SchedulingAlgs } from "./scheduler";
+import Scheduler, { SchedulingAlgs } from "./scheduler";
 
 interface Process {
     pid?: number,
@@ -19,7 +19,7 @@ class CPU {
     processes: Process[] = [];
     runningProcess: Process|null = null;
 
-    constructor(quantum:number = 2,sa: SchedulingAlgs){
+    constructor(quantum: number = 2,sa: SchedulingAlgs){
         this.quantum = quantum;
         this.schedulingAlg = sa;
     }
@@ -30,9 +30,19 @@ class CPU {
 
     Clock(){
         if(this.hasQuantumEnded()){
-            this.changeContext(this.nextProcess());
+            if(this.runningProcess){
+                this.processQueue.unshift(this.runningProcess);
+                this.processQueue =Scheduler.sortProcesses(this.schedulingAlg, this.processQueue);
+            }
+            this.changeContext(this.PopNextProcess());
             return;
         }
+        this.processes.forEach(element => {
+            if (element.creationTime == this.currentClock){
+                this.processQueue.push(element);
+                this.processQueue =Scheduler.sortProcesses(this.schedulingAlg, this.processQueue);
+            }
+        });
         if(this.runningProcess){
             this.runningProcess.clocksProcessed++;
             if(this.runningProcess.clocksProcessed >= this.runningProcess.executionTime)
@@ -53,12 +63,13 @@ class CPU {
         return this.currentClock - this.lastQuantum >= this.quantum;
     }
 
-    private changeContext(process: Process){
-        throw "Not Implemented (changeContext)";
+    private changeContext(process: Process | undefined){
+        this.runningProcess = process || null;
+
     }
 
-    private nextProcess(): Process{
-        throw "Not Implemented (changeContext)";
+    private PopNextProcess(): Process | undefined{
+        return this.processQueue.shift()
     }
 
 }

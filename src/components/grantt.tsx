@@ -4,7 +4,7 @@ import ProcessSquare from "./shared/processSquare";
 
 interface ProcessTimeStep{
   runningProcessId: number,
-  cpuId: number,
+  coreId: number,
 };
 
 interface ganttProps{
