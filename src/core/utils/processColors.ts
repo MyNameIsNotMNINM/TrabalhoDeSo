@@ -35,7 +35,7 @@ const PROCESSCOLORS= [
   "#E7E3C5"
 ];
 
-const cyrb53 = (seed: number, str: string) => {
+const cyrb53 = (seed: number, str: string = "") => {
   let h1 = 0xdeadbeef ^ seed,
       h2 = 0x41c6ce57 ^ seed;
   for (let i = 0, ch; i < str.length; i++) {
@@ -56,4 +56,16 @@ function pickRandomColor(pid: number, processName: string = "low_n") {
   return PROCESSCOLORS[ num % PROCESSCOLORS.length ];
 };
 
-export default pickRandomColor;
+let colorBank: {[key: number]: string} = {}
+
+function getRandomColor(n: number): string {
+  if (colorBank[n])
+    return colorBank[n];
+  let hsl = [20, '50%', '50%'];
+  hsl[0] = cyrb53(n, `${(new Date()).getTime()}`)%256;
+  colorBank[n] =  `hsl(${hsl.join(', ')})`;
+  return colorBank[n];
+}
+
+
+export {pickRandomColor, getRandomColor};

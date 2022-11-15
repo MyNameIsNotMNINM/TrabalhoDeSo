@@ -1,4 +1,4 @@
-import pickRandomColor from "../../core/utils/processColors";
+import {pickRandomColor, getRandomColor} from "../../core/utils/processColors";
 
 interface processSquareProps{
   color?: string,
@@ -10,7 +10,7 @@ interface processSquareProps{
 };
 
 const ProcessSquare = (props: processSquareProps) => {
-  return <div style={{ backgroundColor: props?.color || pickRandomColor(props.pid), ...props?.style }} className={`text-lg ${props?.className}`} >
+  return <div style={{ backgroundColor: props?.color || getRandomColor(props.pid), ...props?.style }} className={`text-lg ${props?.className}`} >
   </div>
 };
 

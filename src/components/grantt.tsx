@@ -1,5 +1,5 @@
 import { Process } from "../core/systemManager";
-import pickRandomColor from "../core/utils/processColors";
+import {pickRandomColor} from "../core/utils/processColors";
 import ProcessSquare from "./shared/processSquare";
 
 interface ProcessTimeStep{
@@ -34,7 +34,7 @@ const Gantt = (props: ganttProps) => {
     }
     let tiles = props.processTimeline.map((element, index) => {
       // const isOverload = element.runningProcess === -1;
-      return <ProcessSquare pid={element.runningProcessId+10} key={index} className="w-full h-full bg-slate-600" style={{gridRow: element.runningProcessId+2, gridColumn: index+2}}>
+      return <ProcessSquare pid={element.runningProcessId+10} key={index} className="w-full h-full rounded-lg bg-slate-600" style={{gridRow: element.runningProcessId+2, gridColumn: index+2}}>
           
       </ProcessSquare>
     })
@@ -44,7 +44,7 @@ const Gantt = (props: ganttProps) => {
   return (
     <div style={{ width: ``}}>
       
-      <div className="grid gap-[0rem]" style={{gridAutoColumns: `2rem`}}>
+      <div className="grid gap-y-1" style={{gridAutoColumns: `2rem`}}>
         {renderProcesses()}
       </div>
     </div>

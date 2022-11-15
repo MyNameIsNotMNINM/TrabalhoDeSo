@@ -3,7 +3,7 @@ import DashboardLayout from '../src/components/page-layout/dashboardLayout'
 
 function makes(){
   let t = [];
-  for (let index = 0; index < 10000; index++) {
+  for (let index = 0; index < 100; index++) {
     t.push({ runningProcessId: Math.floor(Math.random()*10), cpuId: 1})
   }
   return t
