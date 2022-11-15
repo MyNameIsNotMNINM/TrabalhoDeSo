@@ -1,3 +1,4 @@
+import { Process } from "./systemManager";
 
 enum SchedulingAlgs {
   FIFO,
@@ -33,3 +34,5 @@ class Scheduler{
 }
 
 export default Scheduler;
+
+export type { SchedulingAlgs };

@@ -1,3 +1,5 @@
+import { SchedulingAlgs } from "./scheduler";
+
 interface Process {
     pid?: number,
     creationTime: number,
@@ -61,4 +63,5 @@ class CPU {
 
 }
 
-export default CPU;
+export default CPU; 
+export type { Process };
