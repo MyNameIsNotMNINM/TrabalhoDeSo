@@ -6,7 +6,7 @@ interface Process {
     executionTime: number,
     deadline: number,
     priority: number,
-    clocksProcessed: number
+    clocksProcessed?: number
 }
 
 class CPU {
@@ -18,7 +18,7 @@ class CPU {
     processQueue: Process[] = [];
     processes: Process[] = [];
     runningProcess: Process|null = null;
-
+    static pid_count = 1;
     constructor(sa: SchedulingAlgs, quantum: number, overload: number){
         this.quantum = quantum;
         this.schedulingAlg = sa;
@@ -26,6 +26,9 @@ class CPU {
     }
 
     AddProcess(process: Process){
+        process.clocksProcessed = 0;
+        process.pid = CPU.pid_count;
+        CPU.pid_count++;
         this.processes.push(process);
     }
 
@@ -41,10 +44,12 @@ class CPU {
         this.processes.forEach(element => {
             if (element.creationTime == this.currentClock){
                 this.processQueue.push(element);
-                this.processQueue =Scheduler.sortProcesses(this.schedulingAlg, this.processQueue);
+                this.processQueue = Scheduler.sortProcesses(this.schedulingAlg, this.processQueue);
             }
         });
         if(this.runningProcess){
+            if(!this.runningProcess.clocksProcessed)
+                return;
             this.runningProcess.clocksProcessed++;
             if(this.runningProcess.clocksProcessed >= this.runningProcess.executionTime)
                 this.runningProcess = null;
