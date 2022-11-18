@@ -19,6 +19,7 @@ class CPU {
     processes: Process[] = [];
     runningProcess: Process|null = null;
     static pid_count = 1;
+    
     constructor(sa: SchedulingAlgs, quantum: number, overload: number){
         this.quantum = quantum;
         this.schedulingAlg = sa;

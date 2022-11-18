@@ -7,12 +7,12 @@ interface ProcessTimeStep{
   coreId: number,
 };
 
-interface ganttProps{
+interface GanttProps{
   processTimeline: ProcessTimeStep[],
   processes: number,
 };
 
-const Gantt = (props: ganttProps) => {
+const Gantt = (props: GanttProps) => {
   const renderProcesses = ()=>{
     let labels = [];
     for (let index = 0; index < props.processTimeline.length; index++) {

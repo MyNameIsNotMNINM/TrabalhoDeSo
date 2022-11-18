@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import Gantt, { ProcessTimeStep } from '../src/components/grantt'
+import Gantt, { ProcessTimeStep } from '../src/components/gantt'
 import DashboardLayout from '../src/components/page-layout/dashboardLayout'
 
 function makes(t: ProcessTimeStep[] = []){
