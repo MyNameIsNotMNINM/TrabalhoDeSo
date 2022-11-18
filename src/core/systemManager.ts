@@ -13,15 +13,16 @@ class CPU {
     quantum: number;
     lastQuantum: number = 0;
     currentClock: number = 0;
-
+    overload: number;
     schedulingAlg: SchedulingAlgs;
     processQueue: Process[] = [];
     processes: Process[] = [];
     runningProcess: Process|null = null;
 
-    constructor(quantum: number = 2,sa: SchedulingAlgs){
+    constructor(sa: SchedulingAlgs, quantum: number, overload: number){
         this.quantum = quantum;
         this.schedulingAlg = sa;
+        this.overload = overload;
     }
 
     AddProcess(process: Process){

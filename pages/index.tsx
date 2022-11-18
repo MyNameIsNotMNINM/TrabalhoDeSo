@@ -5,7 +5,7 @@ import DashboardLayout from '../src/components/page-layout/dashboardLayout'
 function makes(t: ProcessTimeStep[] = []){
   t = [...t]
   for (let index = 0; index < 1; index++) {
-    t.push({ runningProcessId: Math.floor(Math.random()*24), coreId: 1})
+    t.push({ runningProcessId: Math.floor(Math.random()*10), coreId: 1})
   }
   return t
 }
@@ -23,7 +23,7 @@ export default function Home() {
   }, []);
   return (
     <>
-      <DashboardLayout main={<Gantt processTimeline={timeline} processes={24}/>} header={<div/>}></DashboardLayout>
+      <DashboardLayout main={<Gantt processTimeline={timeline} processes={10}/>} header={<div/>}></DashboardLayout>
     </>
   )
 }
