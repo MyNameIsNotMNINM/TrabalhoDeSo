@@ -17,9 +17,11 @@ class CPU {
     schedulingAlg: SchedulingAlgs;
     processQueue: Process[] = [];
     processes: Process[] = [];
-    runningProcess: Process|null = null;
+    runningProcess: Process | null = null;
+    isCurrentlyOverloading: boolean = false;
+    overloadStart: number = Number.MAX_VALUE;
     static pid_count = 1;
-    
+   
     constructor(sa: SchedulingAlgs, quantum: number, overload: number){
         this.quantum = quantum;
         this.schedulingAlg = sa;
@@ -33,11 +35,11 @@ class CPU {
         this.processes.push(process);
     }
 
-    Clock(){
-        if(this.hasQuantumEnded()){
+    Clock() {
+        if(this.hasQuantumEnded() && Scheduler.algorithmHasTimeSharing(this.schedulingAlg)){
             if(this.runningProcess){
                 this.processQueue.unshift(this.runningProcess);
-                this.processQueue =Scheduler.sortProcesses(this.schedulingAlg, this.processQueue);
+                this.processQueue = Scheduler.sortProcesses(this.schedulingAlg, this.processQueue);
             }
             this.changeContext(this.PopNextProcess());
             return;
@@ -79,6 +81,16 @@ class CPU {
         return this.processQueue.shift()
     }
 
+    getOverloadProcess() {
+        return {
+            pid: -1,
+            creationTime: this.currentClock,
+            executionTime: this.overload,
+            deadline: 0,
+            priority: 0,
+            clocksProcessed: 0
+        }
+    }
 }
 
 export default CPU; 
