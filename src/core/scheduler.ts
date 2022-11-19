@@ -15,7 +15,7 @@ class Scheduler{
     3: Scheduler.edfSort
   }
 
-  private static algorithmHasTimeSharing(algorithm: SchedulingAlgs) : boolean {
+  static algorithmHasTimeSharing(algorithm: SchedulingAlgs) : boolean {
     return {
       0: false,
       1: false,
