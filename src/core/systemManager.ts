@@ -39,21 +39,26 @@ class CPU {
     Clock() {
         this.spawnProcess();
         
-        if(this.hasQuantumEnded() && Scheduler.algorithmHasTimeSharing(this.schedulingAlg)){
+        if(this.hasQuantumEnded()){
             if(this.runningProcess){
                 this.processQueue.unshift(this.runningProcess);
-                this.processQueue = Scheduler.sortProcesses(this.schedulingAlg, this.processQueue);
-                this.overloadEnd = this.currentClock + this.quantum;
+                this.runningProcess = null;
+                if (Scheduler.algorithmHasTimeSharing(this.schedulingAlg)) {
+                    this.beginOverload();
+                }
             }
-        }
-        if (this.hasOverloadEnded() && !this.runningProcess)
-        {
             this.changeContext(this.PopNextProcess());
-            this.runProcess();   
         }
+
+        this.runProcess();   
+        
         this.calculateTurnAround();
 
         this.currentClock++;
+    }
+
+    private beginOverload() {
+        this.overloadEnd = this.currentClock + this.quantum;
     }
 
     private calculateTurnAround() {
@@ -103,12 +108,15 @@ class CPU {
         return this.currentClock >= this.quantumEnd;
     }
 
-    private changeContext(process: Process | undefined){
-        this.runningProcess = process || null;
-        this.quantumEnd = this.currentClock + this.quantum;
+    private changeContext(process: Process | undefined) {
+        if (this.hasOverloadEnded()) {
+            this.runningProcess = process || null;
+            this.quantumEnd = this.currentClock + this.quantum;
+        }
     }
 
     private PopNextProcess(): Process | undefined{
+        this.processQueue = Scheduler.sortProcesses(this.schedulingAlg, this.processQueue);
         return this.processQueue.shift()
     }
 
