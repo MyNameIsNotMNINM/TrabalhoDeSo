@@ -11,7 +11,7 @@ interface Process {
 
 class CPU {
     quantum: number;
-    quantumEnd: number = number.MIN_VALUE;
+    quantumEnd: number = Number.MIN_VALUE;
     currentClock: number = 0;
     overload: number;
     schedulingAlg: SchedulingAlgs;
