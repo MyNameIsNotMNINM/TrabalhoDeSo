@@ -6,7 +6,8 @@ interface Process {
     executionTime: number,
     deadline: number,
     priority: number,
-    clocksProcessed: number
+    clocksProcessed: number,
+    turnAround?: number,
 }
 
 class CPU {
@@ -30,13 +31,14 @@ class CPU {
     AddProcess(process: Process){
         process.clocksProcessed = 0;
         process.pid = CPU.pid_count;
+        process.turnAround = 0;
         CPU.pid_count++;
         this.processes.push(process);
     }
 
     Clock() {
         this.spawnProcess();
-
+        
         if(this.hasQuantumEnded() && Scheduler.algorithmHasTimeSharing(this.schedulingAlg)){
             if(this.runningProcess){
                 this.processQueue.unshift(this.runningProcess);
@@ -49,7 +51,20 @@ class CPU {
             this.changeContext(this.PopNextProcess());
             this.runProcess();   
         }
+        this.calculateTurnAround();
+
         this.currentClock++;
+    }
+
+    private calculateTurnAround() {
+        this.processes.forEach(process => {
+            process.turnAround = process.turnAround ? process.turnAround : 0;
+            if (this.runningProcess
+                && this.runningProcess.pid == process.pid
+                && this.processQueue.findIndex(a => a.pid == process.pid)) {
+                process.turnAround += 1;
+            }
+        });
     }
 
     private spawnProcess() {
@@ -59,6 +74,14 @@ class CPU {
                 this.processQueue = Scheduler.sortProcesses(this.schedulingAlg, this.processQueue);
             }
         });
+    }
+
+    getRelativeTurnAround() {
+        let sumTurnAround = 0;
+        this.processes.forEach(p => {
+            sumTurnAround += (p.turnAround ? p.turnAround : 0);
+        });
+        return sumTurnAround / this.processes.length;
     }
 
     getCPUContext(){
