@@ -6,20 +6,20 @@ interface Process {
     executionTime: number,
     deadline: number,
     priority: number,
-    clocksProcessed?: number
+    clocksProcessed: number,
+    turnAround?: number,
 }
 
 class CPU {
     quantum: number;
-    lastQuantum: number = 0;
+    quantumEnd: number = Number.MIN_VALUE;
     currentClock: number = 0;
     overload: number;
     schedulingAlg: SchedulingAlgs;
     processQueue: Process[] = [];
     processes: Process[] = [];
     runningProcess: Process | null = null;
-    isCurrentlyOverloading: boolean = false;
-    overloadStart: number = Number.MAX_VALUE;
+    overloadEnd: number = Number.MIN_VALUE;
     static pid_count = 1;
    
     constructor(sa: SchedulingAlgs, quantum: number, overload: number){
@@ -31,34 +31,62 @@ class CPU {
     AddProcess(process: Process){
         process.clocksProcessed = 0;
         process.pid = CPU.pid_count;
+        process.turnAround = 0;
         CPU.pid_count++;
         this.processes.push(process);
     }
 
     Clock() {
-        if(this.hasQuantumEnded() && Scheduler.algorithmHasTimeSharing(this.schedulingAlg)){
+        this.spawnProcess();
+        
+        if(this.hasQuantumEnded()){
             if(this.runningProcess){
                 this.processQueue.unshift(this.runningProcess);
-                this.processQueue = Scheduler.sortProcesses(this.schedulingAlg, this.processQueue);
+                this.runningProcess = null;
+                if (Scheduler.algorithmHasTimeSharing(this.schedulingAlg)) {
+                    this.beginOverload();
+                }
             }
             this.changeContext(this.PopNextProcess());
-            return;
         }
+
+        this.runProcess();   
+        
+        this.calculateTurnAround();
+
+        this.currentClock++;
+    }
+
+    private beginOverload() {
+        this.overloadEnd = this.currentClock + this.quantum;
+    }
+
+    private calculateTurnAround() {
+        this.processes.forEach(process => {
+            process.turnAround = process.turnAround ? process.turnAround : 0;
+            if (this.runningProcess
+                && this.runningProcess.pid == process.pid
+                && this.processQueue.findIndex(a => a.pid == process.pid)) {
+                process.turnAround += 1;
+            }
+        });
+    }
+
+    private spawnProcess() {
         this.processes.forEach(element => {
             if (element.creationTime == this.currentClock){
                 this.processQueue.push(element);
                 this.processQueue = Scheduler.sortProcesses(this.schedulingAlg, this.processQueue);
             }
         });
-        if(this.runningProcess){
-            if(!this.runningProcess.clocksProcessed)
-                return;
-            this.runningProcess.clocksProcessed++;
-            if(this.runningProcess.clocksProcessed >= this.runningProcess.executionTime)
-                this.runningProcess = null;
-            return;
-        }
-        this.currentClock++;
+    }
+
+    getRelativeTurnAround() {
+        let sumTurnAround = 0;
+        this.processes.forEach(p => {
+            sumTurnAround += (p.turnAround ? p.turnAround : 0);
+        });
+        return sumTurnAround / this.processes.length;
     }
 
     getCPUContext(){
@@ -68,17 +96,32 @@ class CPU {
         }
     }
 
-    private hasQuantumEnded(){
-        return this.currentClock - this.lastQuantum >= this.quantum;
+    private runProcess() {
+        if (this.runningProcess) {
+            this.runningProcess.clocksProcessed++;
+            if (this.runningProcess.clocksProcessed >= this.runningProcess.executionTime)
+                this.runningProcess = null;
+        }
     }
 
-    private changeContext(process: Process | undefined){
-        this.runningProcess = process || null;
+    private hasQuantumEnded(){
+        return this.currentClock >= this.quantumEnd;
+    }
 
+    private changeContext(process: Process | undefined) {
+        if (this.hasOverloadEnded()) {
+            this.runningProcess = process || null;
+            this.quantumEnd = this.currentClock + this.quantum;
+        }
     }
 
     private PopNextProcess(): Process | undefined{
+        this.processQueue = Scheduler.sortProcesses(this.schedulingAlg, this.processQueue);
         return this.processQueue.shift()
+    }
+
+    private hasOverloadEnded() {
+        return this.overloadEnd <= this.currentClock;
     }
 
     getOverloadProcess() {
