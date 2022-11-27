@@ -12,14 +12,14 @@ interface Process {
 
 class CPU {
     quantum: number;
-    quantumEnd: number = Number.MIN_VALUE;
+    quantumEnd: number = Number.NEGATIVE_INFINITY;
     currentClock: number = 0;
     overload: number;
     schedulingAlg: SchedulingAlgs;
     processQueue: Process[] = [];
     processes: Process[] = [];
     runningProcess: Process | null = null;
-    overloadEnd: number = Number.MIN_VALUE;
+    overloadEnd: number = Number.NEGATIVE_INFINITY;
     static pid_count = 1;
    
     constructor(sa: SchedulingAlgs, quantum: number, overload: number){
@@ -37,9 +37,12 @@ class CPU {
     }
 
     Clock() {
+        if (this.runningProcess && this.runningProcess.clocksProcessed >= this.runningProcess?.executionTime)
+                this.runningProcess = null;
         this.spawnProcess();
         
         if(this.hasQuantumEnded()){
+            console.info("quantum ended");
             if(this.runningProcess){
                 this.processQueue.unshift(this.runningProcess);
                 this.runningProcess = null;
@@ -47,9 +50,10 @@ class CPU {
                     this.beginOverload();
                 }
             }
-            this.changeContext(this.PopNextProcess());
+            if(this.hasOverloadEnded())
+                this.changeContext(this.PopNextProcess());
         }
-
+        
         this.runProcess();   
         
         this.calculateTurnAround();
@@ -99,8 +103,6 @@ class CPU {
     private runProcess() {
         if (this.runningProcess) {
             this.runningProcess.clocksProcessed++;
-            if (this.runningProcess.clocksProcessed >= this.runningProcess.executionTime)
-                this.runningProcess = null;
         }
     }
 

@@ -47,5 +47,4 @@ class Scheduler{
 }
 
 export default Scheduler;
-
-export type { SchedulingAlgs };
+export {SchedulingAlgs};
