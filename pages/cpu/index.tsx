@@ -13,6 +13,7 @@ function ProcessFabric(): Process{
     executionTime: randomBetween(6,10),
     deadline: 10,
     priority: 10,
+    lastProcessed: Number.NEGATIVE_INFINITY,
     clocksProcessed: 0
   }
 }

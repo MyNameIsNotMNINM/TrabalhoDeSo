@@ -7,6 +7,7 @@ interface Process {
     deadline: number,
     priority: number,
     clocksProcessed: number,
+    lastProcessed: number,
     turnAround?: number,
 }
 
@@ -37,12 +38,12 @@ class CPU {
     }
 
     Clock() {
-        if (this.runningProcess && this.runningProcess.clocksProcessed >= this.runningProcess?.executionTime)
+        if (this.hasProcessEnded())
                 this.runningProcess = null;
         this.spawnProcess();
         
-        if(this.hasQuantumEnded()){
-            console.info("quantum ended");
+        // console.warn(`a: fila = ${this.processQueue}, processo= ${this.runningProcess}, clocksProcessed = ${this.runningProcess?.clocksProcessed}, overload =${this.overloadEnd}, clock = ${ this.currentClock }`)
+        if(this.hasQuantumEnded() || this.hasProcessEnded()){
             if(this.runningProcess){
                 this.processQueue.unshift(this.runningProcess);
                 this.runningProcess = null;
@@ -62,7 +63,7 @@ class CPU {
     }
 
     private beginOverload() {
-        this.overloadEnd = this.currentClock + this.quantum;
+        this.overloadEnd = this.currentClock + this.overload;
     }
 
     private calculateTurnAround() {
@@ -102,6 +103,7 @@ class CPU {
 
     private runProcess() {
         if (this.runningProcess) {
+            this.runningProcess.lastProcessed = this.currentClock;
             this.runningProcess.clocksProcessed++;
         }
     }
@@ -124,6 +126,9 @@ class CPU {
 
     private hasOverloadEnded() {
         return this.overloadEnd <= this.currentClock;
+    }
+    private hasProcessEnded() {
+        return !this.runningProcess || this.runningProcess.clocksProcessed >= this.runningProcess.executionTime;
     }
 
     getOverloadProcess() {
