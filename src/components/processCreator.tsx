@@ -1,16 +1,30 @@
+import { useState } from "react";
+import { SchedulingAlgs } from "../core/scheduler";
 import { Process } from "../core/systemManager";
 import {getRandomColor, pickRandomColor} from "../core/utils/processColors";
+import RightSideModal from "./page-layout/rightSideModal";
 
 interface ProcessCreatorProps{
 };
+// creationTime: number,
+// executionTime: number,
+// deadline: number,
+// priority: number,
 
-const processCreator = (props: ProcessCreatorProps) => {
-  const [processTime, setprocessTime] = useState(second)
+interface ProcessCreatorDTO{
+  processes: Process[],
+  schedulingAlgorithm: SchedulingAlgs,
+  quantum: number,
+  overload: number,
+}
+
+const ProcessCreator = (props: ProcessCreatorProps) => {
+  const [data, setData] = useState<ProcessCreatorDTO>();
   return (
-    <div className=" ">
+    <RightSideModal enabled={true}>
 
-    </div>
+    </RightSideModal>
   );
 };
 
-export default ProcessCreatorProps;
+export default ProcessCreator;
