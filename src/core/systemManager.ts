@@ -7,19 +7,20 @@ interface Process {
     deadline: number,
     priority: number,
     clocksProcessed: number,
+    lastProcessed: number,
     turnAround?: number,
 }
 
 class CPU {
     quantum: number;
-    quantumEnd: number = Number.MIN_VALUE;
+    quantumEnd: number = Number.NEGATIVE_INFINITY;
     currentClock: number = 0;
     overload: number;
     schedulingAlg: SchedulingAlgs;
     processQueue: Process[] = [];
     processes: Process[] = [];
     runningProcess: Process | null = null;
-    overloadEnd: number = Number.MIN_VALUE;
+    overloadEnd: number = Number.NEGATIVE_INFINITY;
     static pid_count = 1;
    
     constructor(sa: SchedulingAlgs, quantum: number, overload: number){
@@ -37,9 +38,12 @@ class CPU {
     }
 
     Clock() {
+        if (this.hasProcessEnded())
+                this.runningProcess = null;
         this.spawnProcess();
         
-        if(this.hasQuantumEnded()){
+        // console.warn(`a: fila = ${this.processQueue}, processo= ${this.runningProcess}, clocksProcessed = ${this.runningProcess?.clocksProcessed}, overload =${this.overloadEnd}, clock = ${ this.currentClock }`)
+        if(this.hasQuantumEnded() || this.hasProcessEnded()){
             if(this.runningProcess){
                 this.processQueue.unshift(this.runningProcess);
                 this.runningProcess = null;
@@ -47,9 +51,10 @@ class CPU {
                     this.beginOverload();
                 }
             }
-            this.changeContext(this.PopNextProcess());
+            if(this.hasOverloadEnded())
+                this.changeContext(this.PopNextProcess());
         }
-
+        
         this.runProcess();   
         
         this.calculateTurnAround();
@@ -58,7 +63,7 @@ class CPU {
     }
 
     private beginOverload() {
-        this.overloadEnd = this.currentClock + this.quantum;
+        this.overloadEnd = this.currentClock + this.overload;
     }
 
     private calculateTurnAround() {
@@ -98,9 +103,8 @@ class CPU {
 
     private runProcess() {
         if (this.runningProcess) {
+            this.runningProcess.lastProcessed = this.currentClock;
             this.runningProcess.clocksProcessed++;
-            if (this.runningProcess.clocksProcessed >= this.runningProcess.executionTime)
-                this.runningProcess = null;
         }
     }
 
@@ -122,6 +126,9 @@ class CPU {
 
     private hasOverloadEnded() {
         return this.overloadEnd <= this.currentClock;
+    }
+    private hasProcessEnded() {
+        return !this.runningProcess || this.runningProcess.clocksProcessed >= this.runningProcess.executionTime;
     }
 
     getOverloadProcess() {

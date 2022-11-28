@@ -28,10 +28,6 @@ class Scheduler{
     return Scheduler.algomapper[algorithm](processes);
   }
 
-  static onQuantum(algorithm: SchedulingAlgs, processes: Process[]){
-    
-  }
-
   private static fifoSort(processes: Process[]){
     return processes;
   }
@@ -39,7 +35,7 @@ class Scheduler{
     return processes.sort((a, b) =>  a.executionTime - b.executionTime);
   }
   private static rrSort(processes: Process[]){
-    return processes
+    return processes.sort((a, b) => a.lastProcessed - b.lastProcessed );
   }
   private static edfSort(processes: Process[]){
     return processes.sort((a, b) =>  a.deadline - b.deadline);
@@ -47,5 +43,4 @@ class Scheduler{
 }
 
 export default Scheduler;
-
-export type { SchedulingAlgs };
+export {SchedulingAlgs};
