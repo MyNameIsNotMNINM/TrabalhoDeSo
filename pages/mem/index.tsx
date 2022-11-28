@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import MemoryVisualizer, { Page } from "../../src/components/memoryVisualizer"
 import { Process } from "../../src/core/systemManager"
 
@@ -10,6 +11,7 @@ const newProcess = (): Process=>{
       deadline: 1,
       priority: 1,
       clocksProcessed: 1,
+      lastProcessed: 0,
   }
 }
 let pageCount = 0;
@@ -27,12 +29,15 @@ const newPage = (): Page => {
 
 
 export default function Home(props: any) {
+  const [pages, setPages] = useState<Page[]>([]);
+  useEffect(() => {
+    for (let index = 0; index < props.m; index++) {
+      pages.push(newPage());
+    }
+  }, [])
   if(typeof window == undefined)
     return <></>
-  const pages: Page[] = []
-  for (let index = 0; index < props.m; index++) {
-    pages.push(newPage());
-  }
+  
   return (
     <div className="h-screen w-screen flex">
 

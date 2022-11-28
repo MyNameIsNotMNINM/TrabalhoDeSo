@@ -44,7 +44,7 @@ const Gantt = (props: GanttProps) => {
   return (
     <div style={{ width: ``}}>
       
-      <div className="grid gap-y-1" style={{gridAutoColumns: `2rem`}}>
+      <div className="grid gap-y-1 rounded-sm shadow-md min-w-screen" style={{gridAutoColumns: `2rem`}}>
         {renderProcesses()}
       </div>
     </div>
