@@ -29,16 +29,31 @@ class Scheduler{
   }
 
   private static fifoSort(processes: Process[]){
-    return processes;
+    return [... processes].sort((a,b) => a.priority - b.priority);
   }
   private static sjfSort(processes: Process[]){
-    return processes.sort((a, b) =>  a.executionTime - b.executionTime);
+    return processes.sort((a, b) =>  {
+      const primary = a.priority - b.priority;
+      if(!primary)
+        return a.executionTime - b.executionTime
+      return primary
+    });
   }
   private static rrSort(processes: Process[]){
-    return processes.sort((a, b) => a.lastProcessed - b.lastProcessed );
+    return processes.sort((a, b) => {
+      const primary = a.priority - b.priority;
+      if(!primary)
+        return a.lastProcessed - b.lastProcessed 
+      return primary
+    });
   }
   private static edfSort(processes: Process[]){
-    return processes.sort((a, b) =>  a.deadline - b.deadline);
+    return processes.sort((a, b) =>  {
+      const primary = a.priority - b.priority;
+      if(!primary)
+        return a.deadline - b.deadline
+      return primary
+    });
   }
 }
 

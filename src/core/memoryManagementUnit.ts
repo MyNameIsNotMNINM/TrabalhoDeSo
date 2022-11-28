@@ -16,13 +16,18 @@ enum MemorySchedulingAlgs {
   LUF
 }
 
+type FilterFunction = (page:memoryTableItem)=> boolean;
+
+
 class MMU{
   private memoryTable: memoryTableItem[] = [];
-  private primaryMemory: Page[] = []; 
-  private secondaryMemory: Page[] = []; 
+  private maxPrimaryMemory: number = 40;
+  private primaryMemory: Page|null[] = Array(this.maxPrimaryMemory).fill(null);
+  private secondaryMemory: Page|null[] = Array(this.maxPrimaryMemory).fill(null);
   private memorySchedulingAlgorithm: MemorySchedulingAlgs;
   constructor(memorySchedulingAlgorithm: MemorySchedulingAlgs){
-    this.memorySchedulingAlgorithm = memorySchedulingAlgorithm
+    this.memorySchedulingAlgorithm = memorySchedulingAlgorithm;
+
   }
   allocateMemory(process: Process, amount: number): Page[]{
     const pages = this.createPages(process, amount);
@@ -44,8 +49,23 @@ class MMU{
   }
 
   registerPage(page: Page){
-
+    const primaryMemoryCount = this.primaryMemory.length;
+    if(primaryMemoryCount >= this.maxPrimaryMemory){
+      //paginate to open space on primary memory
+    }
+    this.memoryTable.push({
+      virtualAddress: 1,
+      realAddress: ,
+      isPaginated: false,
+    })
   }
+
+  paginatePrimaryMemory(filterFunction: FilterFunction): number{
+    this.memoryTable.filter(filterFunction)
+    // return paginated page position. also set it to falsy 
+    return 1;
+  }
+
   movePageToPrimaryMemory(page: Page){
     
   }
