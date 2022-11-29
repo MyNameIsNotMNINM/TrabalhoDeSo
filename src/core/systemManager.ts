@@ -42,7 +42,6 @@ class CPU {
                 this.runningProcess = null;
         this.spawnProcess();
         
-        // console.warn(`a: fila = ${this.processQueue}, processo= ${this.runningProcess}, clocksProcessed = ${this.runningProcess?.clocksProcessed}, overload =${this.overloadEnd}, clock = ${ this.currentClock }`)
         if(this.hasQuantumEnded() || this.hasProcessEnded()){
             if(this.runningProcess){
                 this.processQueue.unshift(this.runningProcess);
