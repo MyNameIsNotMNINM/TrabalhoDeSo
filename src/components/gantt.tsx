@@ -32,10 +32,13 @@ const Gantt = (props: GanttProps) => {
       )
       
     }
-    let tiles = props.processTimeline.map((element, index) => {
-      // const isOverload = element.runningProcess === -1;
-      return <ProcessSquare pid={element.runningProcessId+10} key={index} className="w-full h-full rounded-lg bg-slate-600" style={{gridRow: element.runningProcessId+2, gridColumn: index+2}}>
-          
+    let tiles = props.processTimeline.map((element, index, arr) => {
+      const isOverload = element.runningProcessId === -1;
+      if(!isOverload)
+        return <ProcessSquare pid={element.runningProcessId+10} key={index} className="w-full h-full rounded-lg bg-slate-600" style={{gridRow: element.runningProcessId+1, gridColumn: index+2}}>
+        </ProcessSquare>
+      return <ProcessSquare color="red" pid={0} key={index} className="w-full h-full rounded-lg bg-slate-600 text-center" style={{gridRow: 1, gridColumn: index+2}}>
+        
       </ProcessSquare>
     })
 
@@ -44,7 +47,7 @@ const Gantt = (props: GanttProps) => {
   return (
     <div style={{ width: ``}}>
       
-      <div className="grid gap-y-1 rounded-sm shadow-md min-w-screen" style={{gridAutoColumns: `2rem`}}>
+      <div className="grid gap-y-1 rounded-sm shadow-md w-screen overflow-auto" style={{gridAutoColumns: `2rem`}}>
         {renderProcesses()}
       </div>
     </div>

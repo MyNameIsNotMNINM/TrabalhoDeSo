@@ -10,7 +10,7 @@ function randomBetween(a: number, b: number){
 
 function ProcessFabric(): Process{
   return {
-    creationTime: randomBetween(0, 1),
+    creationTime: randomBetween(2, 2),
     executionTime: randomBetween(5,5),
     deadline: 10,
     priority: 10,

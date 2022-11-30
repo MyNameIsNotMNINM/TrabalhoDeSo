@@ -12,6 +12,7 @@ const newProcess = (): Process=>{
       priority: 1,
       clocksProcessed: 1,
       lastProcessed: 0,
+      pageCount: 10
   }
 }
 let pageCount = 0;
