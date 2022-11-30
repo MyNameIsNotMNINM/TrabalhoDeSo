@@ -1,5 +1,6 @@
 import CPU, { Process } from "./systemManager"
 import PageSwapper, { MemorySchedulingAlgs } from "./pageSwapper";
+import { cp } from "fs";
 
 interface Page{
   process: Process,
@@ -18,10 +19,10 @@ type FilterFunction = (page:memoryTableItem)=> boolean;
 
 
 class MMU {
-  memoryTable: memoryTableItem[] = [];
+  private memoryTable: memoryTableItem[] = [];
   private maxPrimaryMemory: number = 40;
-  primaryMemory: (Page | null)[] = Array(this.maxPrimaryMemory).fill(null);
-  secondaryMemory: (Page | null)[] = [];
+  private primaryMemory: (Page | null)[] = Array(this.maxPrimaryMemory).fill(null);
+  private secondaryMemory: (Page | null)[] = [];
   private memorySchedulingAlgorithm: MemorySchedulingAlgs;
   //endereços disponiveis
   private secondaryMemoryAddressCount: number = 0;
@@ -34,49 +35,29 @@ class MMU {
   constructor(memorySchedulingAlgorithm: MemorySchedulingAlgs, cpu: CPU) {
     this.memorySchedulingAlgorithm = memorySchedulingAlgorithm;
     this.cpu = cpu;
-    
   }
 
-
-  private getAvaiableVirtualAddress(): number {
-    if (this.avaiableVirtualMemory.length)
+  getAvaiableVirtualAddress(): number{
+    if(this.avaiableVirtualMemory.length)
       return this.avaiableVirtualMemory.pop() as number;
     return this.virtualMemoryAddressCount++;
   }
 
-  getAvaiableSecondaryAddress(): number {
-    if (this.avaiableSecondaryMemory.length)
+  getAvaiableSecondaryAddress(): number{
+    if(this.avaiableSecondaryMemory.length)
       return this.avaiableSecondaryMemory.pop() as number;
     return this.secondaryMemoryAddressCount++;
   }
 
-  firstAvailablePrimaryMemoryPage(): number | null {
+  firstAvailablePrimaryMemoryPage(): number|null{
     for (let index = 0; index < this.primaryMemory.length; index++) {
-      if (!this.primaryMemory[index])
+      if(!this.primaryMemory[index])
         return index;
     }
     return null;
   }
 
-  deleteProcess(process: Process){
-    let indexesToBeRemoved: memoryTableItem[] = [];
-    this.processMemoryMap[process.pid as number].forEach(virtualAddress =>{
-      const e = this.getMemoryTableItemFromVirtualAddress(virtualAddress) as memoryTableItem;
-      if(!e.isPaginated)
-        this.primaryMemory[e.realAddress] = null;
-      else
-        this.secondaryMemory[e.realAddress] = null;
-      indexesToBeRemoved.push(e)
-    })
-    indexesToBeRemoved.forEach(e=>this.memoryTable.splice(this.memoryTable.indexOf(e), 1))
-    this.processMemoryMap[process.pid as number] = [];
-  }
-
-  private getMemoryTableItemFromVirtualAddress(virtualAddress: number){
-    return this.memoryTable.find(e => e.virtualAddress === virtualAddress)
-  }
-
-  allocateMemory(process: Process, amount: number, currentClock: number): Page[] {
+  allocateMemory(process: Process, amount: number, currentClock: number): Page[]{
     this.processMemoryMap[process.pid as number] = [];
     const pages = this.createPages(process, amount, currentClock);
     pages.forEach(page => {
@@ -86,36 +67,58 @@ class MMU {
     return pages;
   }
 
-  createPages(process: Process, amount: number, currentClock: number) {
-    const pages: Page[] = [];
-    for (let index = 0; index < amount; index++) {
-      pages.push({
-        process,
-        lastAccessed: currentClock,
-        enteredPrimary: currentClock,
-      });
-    }
-    return pages;
+  deleteProcess(process: Process){
+    let indexesToBeRemoved: number[] = [];
+    this.processMemoryMap[process.pid as number].forEach(virtualAddress =>{
+      const e = this.getMemoryTableItemFromVirtualAddress(virtualAddress)
+      if(e.isPaginated)
+      this.primaryMemory[e.realAddress] = null;
+      else
+      this.secondaryMemory[e.realAddress] = null;
+      indexesToBeRemoved.push(this.memoryTable.indexOf(e))
+    })
+    
+    indexesToBeRemoved.forEach(index=>this.memoryTable.splice(index, 1))
+    this.processMemoryMap[process.pid as number] = [];
   }
 
-  registerPage(page: Page) {
+  getMemoryTableItemFromVirtualAddress(virtualAddress: number){
+    return this.memoryTable.find(e => e.virtualAddress === virtualAddress)
+  }
+
+
+  loadProcessOnPrimaryMemory(process: Process){
+    const vas: number[] = this.getAllVirtualAddressesFromProcess(process)
+    vas.forEach(virtualMemoryAddress=>{
+      let memItem = this.getMemoryTableItemFromVirtualAddress(virtualMemoryAddress);
+      if(memItem !== undefined && memItem.isPaginated){
+        const page = this.getPageByVirtualMemory(memItem.virtualAddress);
+        this.removePageFromSecondary(memItem);
+        const emptySpace = this.forceGetPrimaryMemoryEmptySpace();
+        memItem.realAddress = emptySpace;
+        this.primaryMemory[emptySpace] = page;
+      }
+    })
+  }
+
+  registerPage(page: Page){
     let avaiablePosition = this.firstAvailablePrimaryMemoryPage();
-    if (avaiablePosition === null) {
+    if(!avaiablePosition){
       //paginate to open space on primary memory
       avaiablePosition = this.paginatePrimaryMemory(p => !p.isPaginated);
     }
-    let virtualAddress = this.getAvaiableVirtualAddress();
-    this.memoryTable.push({
-      virtualAddress: virtualAddress,
-      realAddress: avaiablePosition as number,
-      isPaginated: false,
-    });
-    this.primaryMemory[avaiablePosition as number] = page;
-    return virtualAddress;
   }
 
-  paginatePrimaryMemory(filterFunction: FilterFunction): number {
+  private getPageByVirtualMemory(virtualMemoryAddress: number){
+    const tItem = this.getMemoryTableItemFromVirtualAddress(virtualMemoryAddress) as memoryTableItem;
+    if(tItem?.isPaginated)
+      return this.secondaryMemory[tItem.realAddress];
+    return this.primaryMemory[tItem.realAddress];
+  }
 
+  paginatePrimaryMemory(filterFunction: FilterFunction): number{
+
+  private paginatePrimaryMemory(filterFunction: FilterFunction): number{
     const itensInPrimaryMemory = this.memoryTable.filter(filterFunction)
     let itensInPrimaryMemoryAlloweds = [] as (memoryTableItem)[];
     let pages = [] as (Page)[];
@@ -134,7 +137,7 @@ class MMU {
     return primaryMemoryAddress;
   }
 
-  movePageToPrimaryMemory(page: Page, memoryTableItemIndex: number) {
+  private movePageToPrimaryMemory(page: Page, memoryTableItemIndex: number) {
     let avaiablePosition = this.firstAvailablePrimaryMemoryPage();
     if (!avaiablePosition) {
       //paginate to open space on primary memory
@@ -143,24 +146,22 @@ class MMU {
     page.enteredPrimary = this.cpu.currentClock;
     page.lastAccessed = this.cpu.currentClock;
     this.primaryMemory[avaiablePosition] = page;
-    this.secondaryMemory[this.memoryTable[memoryTableItemIndex].realAddress] = null;
-    this.avaiableSecondaryMemory.push(this.memoryTable[memoryTableItemIndex].realAddress);
     this.memoryTable[memoryTableItemIndex].realAddress = avaiablePosition;
     this.memoryTable[memoryTableItemIndex].isPaginated = false;
   }
-  movePageTosecondaryMemory(page: Page, memoryTableItemIndex: number) {
+  movePageTosecondaryMemory(page: Page, memoryTableItemIndex: number){
     let avaiableSecondaryAddress = this.getAvaiableSecondaryAddress();
     this.secondaryMemory[avaiableSecondaryAddress] = page;
     this.memoryTable[memoryTableItemIndex].realAddress = avaiableSecondaryAddress;
     this.memoryTable[memoryTableItemIndex].isPaginated = true;
   }
-  movePagesToPrimaryMemory(pages: Page[], memoryTableItemIndex: number[]) {
+  movePagesToPrimaryMemory(pages: Page[], memoryTableItemIndex: number[]){
     pages.forEach((p, index) => this.movePageToPrimaryMemory(p, memoryTableItemIndex[index]));
   }
 
-  getAllPagesFromProcess(process: Process): {page: Page, memoryTableItem: memoryTableItem,  memoryTableItemIndex: number}[] {
-    let pages = [] as {page: Page, memoryTableItem: memoryTableItem, memoryTableItemIndex: number}[];
-    this.memoryTable.forEach((mt, index) => {
+  getAllPagesFromProcess(process: Process): Page[] {
+    let pages = [] as Page[];
+    this.memoryTable.forEach(mt => {
       let actPage: Page;
       if (mt.isPaginated) {
         actPage = this.secondaryMemory[mt.realAddress] as Page;
@@ -168,24 +169,10 @@ class MMU {
         actPage = this.primaryMemory[mt.realAddress] as Page;
       }
       if (actPage.process.pid == process.pid) {
-        pages.push({ page: actPage , memoryTableItem: mt, memoryTableItemIndex: index});
+        pages.push(actPage);
       }
     });
     return pages;
-  }
-
-  pushProcessToPrimaryMemory(process: Process): boolean {
-      let pagesFromProcess = this.getAllPagesFromProcess(process);
-      for (let index = 0; index < pagesFromProcess.length; index++) {
-        let pageFromProcess = pagesFromProcess[index];
-      if (pageFromProcess.memoryTableItem.isPaginated) {
-        this.movePageToPrimaryMemory(pageFromProcess.page, pageFromProcess.memoryTableItemIndex);
-      } else {
-        pageFromProcess.page.lastAccessed = this.cpu.currentClock;
-        this.primaryMemory[pageFromProcess.memoryTableItem.realAddress] = pageFromProcess.page;
-      }
-    }
-    return true;
   }
 
 }

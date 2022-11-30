@@ -11,7 +11,7 @@ interface PageSwapAlgoReturn{
 };
 
 class PageSwapper {
-    private static algomapper = {
+  private static algomapper = {
     0: PageSwapper.fifo,
     1: PageSwapper.luf,
   }

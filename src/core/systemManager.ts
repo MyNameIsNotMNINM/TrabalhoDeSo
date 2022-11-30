@@ -1,3 +1,5 @@
+import MMU from "./memoryManagementUnit";
+import { MemorySchedulingAlgs } from "./pageSwapper";
 import Scheduler, { SchedulingAlgs } from "./scheduler";
 
 interface Process {
@@ -8,6 +10,7 @@ interface Process {
     priority: number,
     clocksProcessed: number,
     lastProcessed: number,
+    pageCount: number,
     turnAround?: number,
 }
 
@@ -21,12 +24,14 @@ class CPU {
     processes: Process[] = [];
     runningProcess: Process | null = null;
     overloadEnd: number = Number.NEGATIVE_INFINITY;
+    mmu: MMU;
     static pid_count = 1;
    
-    constructor(sa: SchedulingAlgs, quantum: number, overload: number){
+    constructor(sa: SchedulingAlgs, quantum: number, overload: number, memorySchedulingAlgorithm: MemorySchedulingAlgs){
         this.quantum = quantum;
         this.schedulingAlg = sa;
         this.overload = overload;
+        this.mmu = new MMU(memorySchedulingAlgorithm, this);
     }
 
     AddProcess(process: Process){
@@ -38,8 +43,16 @@ class CPU {
     }
 
     Clock() {
-        if (this.hasProcessEnded())
-                this.runningProcess = null;
+        console.log([...this.mmu.primaryMemory], [...this.mmu.secondaryMemory])
+        console.log(this.runningProcess, [...this.processQueue]);
+        console.log(`pid: ${this.runningProcess?.pid}`);
+        console.log([...this.mmu.memoryTable])
+        console.error("clockend");
+        if (this.hasProcessEnded()){
+            if (this.runningProcess)
+                this.mmu.deleteProcess(this.runningProcess);
+            this.runningProcess = null;
+        }
         this.spawnProcess();
         
         if(this.hasQuantumEnded() || this.hasProcessEnded()){
@@ -81,6 +94,7 @@ class CPU {
             if (element.creationTime == this.currentClock){
                 this.processQueue.push(element);
                 this.processQueue = Scheduler.sortProcesses(this.schedulingAlg, this.processQueue);
+                this.mmu.allocateMemory(element, element.pageCount, this.currentClock);
             }
         });
     }
@@ -102,6 +116,7 @@ class CPU {
 
     private runProcess() {
         if (this.runningProcess) {
+            this.mmu.pushProcessToPrimaryMemory(this.runningProcess)
             this.runningProcess.lastProcessed = this.currentClock;
             this.runningProcess.clocksProcessed++;
         }
