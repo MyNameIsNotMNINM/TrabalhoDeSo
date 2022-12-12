@@ -1,4 +1,7 @@
+import { useContext } from "react";
+import PidContext from "../../context/processContext";
 import {pickRandomColor, getRandomColor} from "../../core/utils/processColors";
+import useHover from "../../hooks/useHover";
 
 interface processSquareProps{
   color?: string,
@@ -10,7 +13,13 @@ interface processSquareProps{
 };
 
 const ProcessSquare = (props: processSquareProps) => {
-  return <div style={{ backgroundColor: props?.color || getRandomColor(props.pid), ...props?.style }} className={`text-lg ${props?.className}`} >
+  const {pid, setPid} = useContext(PidContext);
+    const selectedStyle = pid == props.pid ? " scale-[1.3]" : ""
+    const [hoverRef, isHovered] = useHover<HTMLDivElement>();
+    if(isHovered){
+      setPid(props.pid)
+    }
+  return <div ref={hoverRef} style={{ backgroundColor: props?.color || getRandomColor(props.pid +10), ...props?.style }} className={`text-lg ${props?.className} ${selectedStyle}`} >
     {props.children}
   </div>
 };

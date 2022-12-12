@@ -13,7 +13,7 @@ interface CreateDTO {
   pageCount: number
 }
 
-const newProcess = (props: {onCreate: (a:CreateDTO)=>void}) => {
+function NewProcess (props: {onCreate: (a:CreateDTO)=>void}): JSX.Element {
   const [creationTime, setCreationTime] = useState<number>(0);
   const [executionTime, setExecutionTime] = useState<number>(0);
   const [deadline, setDeadline] = useState<number>(0);
@@ -43,13 +43,15 @@ const newProcess = (props: {onCreate: (a:CreateDTO)=>void}) => {
         <label htmlFor="pageCount">pageCount: </label>
         <input type="number" id="pageCount" value={pageCount} onChange={e => setPageCount(parseFloat(e.target.value))}/>
       </div>
-      <button onClick={()=>props.onCreate({
-        creationTime,
-        executionTime,
-        deadline,
-        priority,
-        pageCount,
-      })} className="p-3 bg-slate-800 text-white">Create New Process</button>
+      <button onClick={()=>{
+        props.onCreate({
+          creationTime,
+          executionTime,
+          deadline,
+          priority,
+          pageCount,
+        })
+      }} className="p-3 bg-slate-800 text-white">Create New Process</button>
     </div>
     );
 }
@@ -107,6 +109,7 @@ const ProcessCreator = (props: ProcessCreatorProps) => {
         lastProcessed: 0
       }
     );
+    setData({...data})
   }
 
   useEffect(() => {
@@ -116,7 +119,7 @@ const ProcessCreator = (props: ProcessCreatorProps) => {
 
   return (
     <RightSideModal enabled={true}>
-      <div className="flex flex-col gap-4 p-3">
+      <div className="flex flex-col gap-4 p-3 max-h-screen">
         <h1 className="text-lg font-bold font">Configurações:</h1>
         <div className="flex gap-5">
           <label htmlFor="quantum">quantum: </label>
@@ -165,11 +168,12 @@ const ProcessCreator = (props: ProcessCreatorProps) => {
 
 
 
-      {newProcess({onCreate:onCreateNewProcess})}
-      
-      {
-        data.processes.map((process, index) => <ProcessShower process={process} index={index} key={index}/>)
-      }
+      <NewProcess onCreate={onCreateNewProcess}/>
+      <div className="h-[50px] scroll-auto">
+        {
+          data.processes.map((process, index) => <ProcessShower process={process} index={index} key={index}/>)
+        }
+      </div>
       <button onClick={()=>{
         const cpu = new CPU(data.schedulingAlgorithm, data.quantum, data.overload, data.memoryAlgorithm);
         data.processes.forEach(e => cpu.AddProcess(e));
